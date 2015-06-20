@@ -1229,25 +1229,44 @@ describe('api', function() {
     });
 
     it('should handle quoted strings', function(done) {
+      var s1a, s2a, s3a; 
+      var s1q, s2q, s3q; 
+      // jshint quotmark: false
       var result = sass.renderSync({
-        data: '.swapped { result: swap-quotes("asdf", qwerty); }',
+        data: '.swapped { result: swap-quotes("asdf", qwerty, \'jcukng\'); }',
         functions: {
-          'swap-quotes($s1, $s2)': function(s1, s2) {
-            s1.setQuoted(!s1.isQuoted());
-            s2.setQuoted(!s2.isQuoted());
-            console.log("s1: " + s1.isQuoted());
-            console.log("s2: " + s2.isQuoted());
-            var list = new sass.types.List(2);
+          'swap-quotes($s1, $s2, $s3)': function(s1, s2, s3) {
+            s1a = s1.isQuoted();
+            s2a = s2.isQuoted();
+            s3a = s3.isQuoted();
+			s1.setValue('asdf');
+            s1.setQuoted(false);
+            s2.setValue("'qwerty'");
+            s2.setQuoted(true);
+            s3.setValue('"jcukng"');
+            s3.setQuoted(true);
+            s1q = s1.isQuoted();
+            s2q = s2.isQuoted();
+            s3q = s3.isQuoted();
+            var list = new sass.types.List(3);
             list.setValue(0, s1);
             list.setValue(1, s2);
+            list.setValue(2, s3);
             list.setSeparator(true);
 
             return list;
           }
         }
       });
+      // jshint quotmark: single
 
-      assert.equal(result.css.toString().trim(), '.swapped { result: asdf, "qwerty"; }');
+      assert.equal(s1a, true);
+      assert.equal(s2a, false);
+      assert.equal(s3a, true);
+      assert.equal(s1q, false);
+      assert.equal(s2q, true);
+      assert.equal(s3q, true);
+      assert.equal(result.css.toString().trim(), '.swapped {\n  result: asdf, \'qwerty\', "jcukng"; }');
       done();
     });
 
